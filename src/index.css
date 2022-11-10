@@ -21,3 +21,28 @@ body {
     align-items: center;
     height: 100vh;
 }
+
+.App {
+    max-width: calc(9px * 35 + 1px * 2);
+    /* a. (マスの幅) * 個数 + (ボーダーの幅) * 本数 */
+    text-align: center;
+}
+
+.dots {
+    height: 9px;
+    width: 9px;
+    background: #0f1d1d;
+}
+
+.field {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.snake {
+    background: white;
+}
+
+.food {
+    background: pink;
+}
