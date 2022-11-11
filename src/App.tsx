@@ -12,16 +12,36 @@ const defaultInterval = 100;
 
 let timer: number | NodeJS.Timer | undefined = undefined;
 
-const unsubscribe = () => {
+const unsubscribe = (): void => {
   if (!timer) {
     return;
   }
   clearInterval(timer);
 };
 
+const isCollision = (fieldSize: number, position: Position): boolean => {
+  if (position.y < 0 || position.x < 0) {
+    return true;
+  }
+
+  if (position.y > fieldSize - 1 || position.x > fieldSize - 1) {
+    return true;
+  }
+
+  return false;
+};
+
+const GameStatus = Object.freeze({
+  init: "init",
+  playing: "playing",
+  suspended: "suspended",
+  gameover: "gameover",
+});
+
 function App() {
   const [fields, setFields] = useState<string[][]>(initialValues);
   const [position, setPosition] = useState<Position>(initialPosition);
+  const [status, setStatus] = useState<string>(GameStatus.init);
   const [tick, setTick] = useState<number>(0);
 
   useEffect(() => {
@@ -34,25 +54,43 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!position) {
+    if (!position || status !== GameStatus.playing) {
       return;
     }
-    goUp();
+    const canContinue = goUp();
+    if (!canContinue) {
+      setStatus(GameStatus.gameover);
+    }
   }, [tick]);
 
-  const goUp = () => {
+  const onStart = (): void => setStatus(GameStatus.playing);
+
+  const onRestart = (): void => {
+    timer = setInterval(() => {
+      setTick((tick) => tick + 1);
+    }, defaultInterval);
+    setStatus(GameStatus.init);
+    setPosition(initialPosition);
+    setFields(initFields(35, initialPosition));
+  };
+
+  const goUp = (): boolean => {
     const { x, y } = position;
 
-    // フィールドの新しい座標を取得
-    const nextY = Math.max(y - 1, 0);
+    const newPosition = { x, y: y - 1 };
+    if (isCollision(fields.length, newPosition)) {
+      unsubscribe();
+      return false;
+    }
     // スネークの元いた位置を空に
     fields[y][x] = "";
     // 次にいる場所を"snake"に変更
-    fields[nextY][x] = "snake";
+    fields[newPosition.y][x] = "snake";
     // スネークの位置を更新
-    setPosition({ x, y: nextY });
+    setPosition(newPosition);
     // フィールドを更新
     setFields(fields);
+    return true;
   };
 
   return (
@@ -67,7 +105,7 @@ function App() {
         <Field fields={fields} />
       </main>
       <footer className="footer">
-        <Button />
+        <Button status={status} onRestart={onRestart} onStart={onStart} />
         <ManipulationPanel />
       </footer>
     </div>
