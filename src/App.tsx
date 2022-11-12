@@ -9,6 +9,9 @@ import { Position } from "./common/Position";
 const initialPosition: Position = { x: 17, y: 17 };
 const initialValues: string[][] = initFields(35, initialPosition);
 const defaultInterval: number = 100;
+const defaultDifficulty = 3;
+
+const Difficulty = [1000, 500, 100, 50, 10];
 
 let timer: number | NodeJS.Timer | undefined = undefined;
 
@@ -87,16 +90,18 @@ function App() {
   const [body, setBody] = useState<Position[]>([]);
   const [status, setStatus] = useState<string>(GameStatus.init);
   const [direction, setDirection] = useState<string>(Direction.up);
+  const [difficulty, setDifficulty] = useState<number>(defaultDifficulty);
   const [tick, setTick] = useState<number>(0);
 
   useEffect(() => {
     setBody([initialPosition]);
     // ゲームの中の時間を管理する
+    const interval = Difficulty[difficulty - 1];
     timer = setInterval(() => {
       setTick((tick) => tick + 1);
-    }, defaultInterval);
+    }, interval);
     return unsubscribe;
-  }, []);
+  }, [difficulty]);
 
   useEffect(() => {
     if (body.length === 0 || status !== GameStatus.playing) {
@@ -109,6 +114,8 @@ function App() {
   }, [tick]);
 
   const onStart = (): void => setStatus(GameStatus.playing);
+
+  const onStop = (): void => setStatus(GameStatus.suspended);
 
   const onRestart = (): void => {
     timer = setInterval(() => {
@@ -164,6 +171,19 @@ function App() {
     return true;
   };
 
+  const onChangeDifficulty = useCallback(
+    (difficulty: number) => {
+      if (status !== GameStatus.init) {
+        return;
+      }
+      if (difficulty < 1 || difficulty > Difficulty.length) {
+        return;
+      }
+      setDifficulty(difficulty);
+    },
+    [status, difficulty]
+  );
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const newDirection = DirectionKeyCodeMap[e.keyCode];
@@ -183,13 +203,22 @@ function App() {
         <div className="title-container">
           <h1 className="title">Snake Game</h1>
         </div>
-        <Navigation />
+        <Navigation
+          length={body.length}
+          difficulty={difficulty}
+          onChangeDifficulty={onChangeDifficulty}
+        />
       </header>
       <main className="main">
         <Field fields={fields} />
       </main>
       <footer className="footer">
-        <Button status={status} onRestart={onRestart} onStart={onStart} />
+        <Button
+          status={status}
+          onStop={onStop}
+          onStart={onStart}
+          onRestart={onRestart}
+        />
         <ManipulationPanel onChange={onChangeDirection} />
       </footer>
     </div>
