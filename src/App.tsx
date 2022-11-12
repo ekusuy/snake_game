@@ -5,13 +5,18 @@ import Button from "./components/Button";
 import ManipulationPanel from "./components/ManipulationPanel";
 import { getFoodPosition, initFields } from "./utils/index";
 import { Position } from "./common/Position";
-
-const initialPosition: Position = { x: 17, y: 17 };
-const initialValues: string[][] = initFields(35, initialPosition);
-const defaultInterval: number = 100;
-const defaultDifficulty = 3;
-
-const Difficulty = [1000, 500, 100, 50, 10];
+import {
+  defaultDifficulty,
+  defaultInterval,
+  GameStatus,
+  initialPosition,
+  initialValues,
+  Difficulty,
+  OppositeDirection,
+  Delta,
+  DirectionKeyCodeMap,
+} from "./constants";
+import { Direction } from "./constants/index";
 
 let timer: number | NodeJS.Timer | undefined = undefined;
 
@@ -33,53 +38,6 @@ const isCollision = (fieldSize: number, position: Position): boolean => {
 
   return false;
 };
-
-const GameStatus = Object.freeze({
-  init: "init",
-  playing: "playing",
-  suspended: "suspended",
-  gameover: "gameover",
-});
-
-const Direction = Object.freeze({
-  up: "up",
-  right: "right",
-  left: "left",
-  down: "down",
-});
-
-interface receiveDirection {
-  [key: string]: string;
-}
-
-const OppositeDirection: receiveDirection = Object.freeze({
-  up: "down",
-  right: "left",
-  left: "right",
-  down: "up",
-});
-
-interface receiveDelta {
-  [key: string]: Position;
-}
-
-const Delta: receiveDelta = Object.freeze({
-  up: { x: 0, y: -1 },
-  right: { x: 1, y: 0 },
-  left: { x: -1, y: 0 },
-  down: { x: 0, y: 1 },
-});
-
-interface KeyCode {
-  [key: number]: string;
-}
-
-const DirectionKeyCodeMap: KeyCode = Object.freeze({
-  37: Direction.left,
-  38: Direction.up,
-  39: Direction.right,
-  40: Direction.down,
-});
 
 const isEatingMyself = (fields: string[][], position: Position) => {
   return fields[position.y][position.x] === "snake";
