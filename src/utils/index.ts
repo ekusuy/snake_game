@@ -26,3 +26,21 @@ export const getFoodPosition = (fieldSize: number, excludes: Position[]) => {
         }
     }
 }
+
+export const isCollision = (fieldSize: number, position: Position): boolean => {
+   if (position.y < 0 || position.x < 0) {
+     // x, y のどちらかの座標がマイナスの値 の時
+     return true;
+   }
+
+   if (position.y > fieldSize - 1 || position.x > fieldSize - 1) {
+     // x, y のどちらかの座標がフィールドサイズを超えてしまっている時
+     return true;
+   }
+
+   return false;
+ };
+
+export const isEatingMyself = (fields: string[][], position: Position) => {
+   return fields[position.y][position.x] === 'snake'
+ }
