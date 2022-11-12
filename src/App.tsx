@@ -3,7 +3,7 @@ import Navigation from "./components/Navigation";
 import Field from "./components/Field";
 import Button from "./components/Button";
 import ManipulationPanel from "./components/ManipulationPanel";
-import { initFields } from "./utils/index";
+import { getFoodPosition, initFields } from "./utils/index";
 import { Position } from "./common/Position";
 
 const initialPosition: Position = { x: 17, y: 17 };
@@ -78,15 +78,19 @@ const DirectionKeyCodeMap: KeyCode = Object.freeze({
   40: Direction.down,
 });
 
+const isEatingMyself = (fields: string[][], position: Position) => {
+  return fields[position.y][position.x] === "snake";
+};
+
 function App() {
   const [fields, setFields] = useState<string[][]>(initialValues);
-  const [position, setPosition] = useState<Position>(initialPosition);
+  const [body, setBody] = useState<Position[]>([]);
   const [status, setStatus] = useState<string>(GameStatus.init);
   const [direction, setDirection] = useState<string>(Direction.up);
   const [tick, setTick] = useState<number>(0);
 
   useEffect(() => {
-    setPosition(initialPosition);
+    setBody([initialPosition]);
     // ゲームの中の時間を管理する
     timer = setInterval(() => {
       setTick((tick) => tick + 1);
@@ -95,7 +99,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!position || status !== GameStatus.playing) {
+    if (body.length === 0 || status !== GameStatus.playing) {
       return;
     }
     const canContinue = handleMoving();
@@ -111,7 +115,7 @@ function App() {
       setTick((tick) => tick + 1);
     }, defaultInterval);
     setStatus(GameStatus.init);
-    setPosition(initialPosition);
+    setBody([initialPosition]);
     setFields(initFields(35, initialPosition));
     setDirection(Direction.up);
   };
@@ -130,18 +134,32 @@ function App() {
   );
 
   const handleMoving = () => {
-    const { x, y } = position;
+    const { x, y } = body[0];
     const delta = Delta[direction];
     const newPosition = {
       x: x + delta.x,
       y: y + delta.y,
     };
-    if (isCollision(fields.length, newPosition)) {
+    if (
+      isCollision(fields.length, newPosition) ||
+      isEatingMyself(fields, newPosition)
+    ) {
       return false;
     }
-    fields[y][x] = "";
+    const newBody = [...body];
+    if (fields[newPosition.y][newPosition.x] !== "food") {
+      const removingTrack = newBody.pop();
+      if (removingTrack) {
+        fields[removingTrack.y][removingTrack.x] = "";
+      }
+    } else {
+      const food = getFoodPosition(fields.length, [...newBody, newPosition]);
+      fields[food.y][food.x] = "food";
+    }
     fields[newPosition.y][newPosition.x] = "snake";
-    setPosition(newPosition);
+    newBody.unshift(newPosition);
+
+    setBody(newBody);
     setFields(fields);
     return true;
   };
