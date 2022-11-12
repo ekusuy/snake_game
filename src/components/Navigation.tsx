@@ -1,4 +1,5 @@
 import React from "react";
+import { defaultDifficulty, Difficulty } from "../constants";
 
 type Props = {
   length: number;
@@ -8,10 +9,10 @@ type Props = {
 
 const Navigation: React.FC<Props> = ({
   length,
-  difficulty = 3,
+  difficulty = defaultDifficulty,
   onChangeDifficulty,
 }) => {
-  const upVisibility = difficulty < 5 ? "" : "is-hidden";
+  const upVisibility = difficulty < Difficulty.length ? "" : "is-hidden";
   const downVisibility = difficulty > 1 ? "" : "is-hidden";
   const onUpDifficulty = () => onChangeDifficulty(difficulty + 1);
   const onDownDifficulty = () => onChangeDifficulty(difficulty - 1);
